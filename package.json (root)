@@ -1,0 +1,157 @@
+ {
+    "name": "finance-saas",
+    "version": "1.0.0",
+    "private": true,
+    "scripts": {
+      "dev:backend": "cd backend && npm run dev",
+      "dev:frontend": "cd frontend && npm run dev",
+      "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+      "docker:up": "docker-compose up -d",
+      "docker:down": "docker-compose down"
+    },
+    "devDependencies": {
+      "concurrently": "^8.2.2"
+  .github/workflows/deploy-prod.yml
+
+  name: Deploy to Production
+      ports:
+        - "5432:5432"
+      volumes:
+        - postgres_data:/var/lib/postgresql/data
+      healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U finance_user"]
+        interval: 5s
+        timeout: 5s
+        retries: 5
+
+    redis:
+      image: redis:7-alpine
+      ports:
+        - "6379:6379"
+      volumes:
+        - redis_data:/data
+      healthcheck:
+        test: ["CMD", "redis-cli", "ping"]
+        interval: 5s
+        timeout: 3s
+        retries: 5
+
+  volumes:
+    postgres_data:
+    redis_data:
+
+  ---
+  package.json (root)
+
+  {
+    "name": "finance-saas",
+    "version": "1.0.0",
+    "private": true,
+    "scripts": {
+      "dev:backend": "cd backend && npm run dev",
+      "dev:frontend": "cd frontend && npm run dev",
+      "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+      "docker:up": "docker-compose up -d",
+      "docker:down": "docker-compose down"
+    },
+  .github/workflows/deploy-prod.yml
+
+  name: Deploy to Production
+      ports:
+        - "5432:5432"
+      volumes:
+        - postgres_data:/var/lib/postgresql/data
+      healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U finance_user"]
+        interval: 5s
+        timeout: 5s
+        retries: 5
+
+    redis:
+      image: redis:7-alpine
+      ports:
+        - "6379:6379"
+      volumes:
+        - redis_data:/data
+      healthcheck:
+        test: ["CMD", "redis-cli", "ping"]
+        interval: 5s
+        timeout: 3s
+        retries: 5
+
+  volumes:
+    postgres_data:
+    redis_data:
+
+  ---
+  package.json (root)
+
+  {
+    "name": "finance-saas",
+    "version": "1.0.0",
+    "private": true,
+    "scripts": {
+      "dev:backend": "cd backend && npm run dev",
+      "dev:frontend": "cd frontend && npm run dev",
+      "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+      "docker:up": "docker-compose up -d",
+      "docker:down": "docker-compose down"
+    },
+    "devDependencies": {
+      "concurrently": "^8.2.2"
+    }
+  }
+
+  ---
+  .github/workflows/deploy-prod.yml
+
+  name: Deploy to Production
+
+  on:
+    workflow_dispatch:
+
+  jobs:
+    deploy-backend:
+      runs-on: ubuntu-latest
+      steps:
+────────-─uses:─actions/checkout@v4──────────────────────────────────────────────────────────────────────────────────────
+────────-─name:─Configure─AWS─credentials───────────────────────────────────────────────────────────────────────────  ? f
+or shortcuuses: aws-actions/configure-aws-credentials@v4
+          with:
+────────────aws-access-key-id:─${{─secrets.AWS_ACCESS_KEY_ID─}}──────────────────────────────────────────────────────────
+  ? for shoraws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            aws-region: us-east-1
+        - name: Login to ECR
+          uses: aws-actions/amazon-ecr-login@v2
+          id: ecr
+        - name: Build and push backend image
+          uses: docker/build-push-action@v5
+          with:
+            context: ./backend
+            push: true
+            tags: ${{ steps.ecr.outputs.registry }}/finance-saas-backend:prod-${{ github.sha }}
+        - name: Deploy to ECS
+          run: |
+            aws ecs update-service --cluster finance-saas-prod \
+              --service backend-service --force-new-deployment
+
+    deploy-frontend:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v4
+        - name: Configure AWS credentials
+          uses: aws-actions/configure-aws-credentials@v4
+          with:
+            aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            aws-region: us-east-1
+        - name: Build and push frontend image
+          uses: docker/build-push-action@v5
+          with:
+            context: ./frontend
+            push: true
+            tags: ${{ steps.ecr.outputs.registry }}/finance-saas-frontend:prod-${{ github.sha }}
+        - name: Deploy to S3/CloudFront
+          run: |
+            aws s3 sync ./frontend/dist s3://finance-saas-frontend-prod --delete
+            aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DIST_ID }} --paths "/*"
