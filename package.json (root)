@@ -1,10 +1,5 @@
-
-package.json (root)
-
-  {
-    "name": "finance-saas",
-    "version": "1.0.0",
-    "private": true,
+ {                                                                                                                                                                                                                                              "name": "finance-saas",
+    "version": "1.0.0",                                                                                                                                                                                                                      ──  "private": true,─────────────────────────────────────────────────────────────────────────────────────────────────────  ? for shortcuts
     "scripts": {
       "dev:backend": "cd backend && npm run dev",
       "dev:frontend": "cd frontend && npm run dev",
@@ -12,31 +7,7 @@ package.json (root)
       "docker:up": "docker-compose up -d",
       "docker:down": "docker-compose down"
     },
-  .github/workflows/deploy-prod.yml
-
-  name: Deploy to Production
-      ports:
-        - "5432:5432"
-      volumes:
-        - postgres_data:/var/lib/postgresql/data
-      healthcheck:
-        test: ["CMD-SHELL", "pg_isready -U finance_user"]
-        interval: 5s
-        timeout: 5s
-        retries: 5
-
-    redis:
-      image: redis:7-alpine
-      ports:
-        - "6379:6379"
-      volumes:
-        - redis_data:/data
-      healthcheck:
-        test: ["CMD", "redis-cli", "ping"]
-        interval: 5s
-        timeout: 3s
-        retries: 5
-
-  volumes:
-    postgres_data:
-    redis_data:
+    "devDependencies": {
+      "concurrently": "^8.2.2"
+    }
+  }
