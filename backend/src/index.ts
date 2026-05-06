@@ -1,4 +1,5 @@
- import express from 'express';
+import 'dotenv/config';
+  import express from 'express';
   import helmet from 'helmet';
   import { env } from './config/env';
   import { prisma } from './config/database';
