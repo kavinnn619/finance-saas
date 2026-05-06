@@ -31,8 +31,18 @@ import 'dotenv/config';
   const start = async () => {
     await prisma.$connect();
     await redisClient.connect();
-    app.listen(env.PORT, () => console.log(`Finance SaaS backend running on ${env.PORT}`));
+    app.listen(env.PORT, () => {
+      console.log(`Finance SaaS backend running on ${env.PORT}`);
+    });
   };
 
-  start().catch((err) => { console.error('Startup failed:', err); process.exit(1); });
-  process.on('SIGTERM', async () => { await prisma.$disconnect(); await redisClient.quit(); process.exit(0); });
+  start().catch((err) => {
+    console.error('Startup failed:', err);
+    process.exit(1);
+  });
+
+  process.on('SIGTERM', async () => {
+    await prisma.$disconnect();
+    await redisClient.quit();
+    process.exit(0);
+  });
